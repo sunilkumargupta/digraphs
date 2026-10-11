@@ -1,0 +1,1324 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phonics Master: Digraph Wonder Lab</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti for Reward Animations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <!-- Font Awesome for clean educational iconography -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            200: '#bae0fd',
+                            400: '#38bdf8',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            purple: '#7c3aed',
+                            sunny: '#f59e0b',
+                            mint: '#10b981',
+                            coral: '#f43f5e'
+                        }
+                    },
+                    keyframes: {
+                        bounceGentle: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-6px)' }
+                        },
+                        pulseRing: {
+                            '0%': { transform: 'scale(0.95)', boxShadow: '0 0 0 0 rgba(239, 68, 68, 0.7)' },
+                            '70%': { transform: 'scale(1)', boxShadow: '0 0 0 15px rgba(239, 68, 68, 0)' },
+                            '100%': { transform: 'scale(0.95)', boxShadow: '0 0 0 0 rgba(239, 68, 68, 0)' }
+                        }
+                    },
+                    animation: {
+                        'bounce-gentle': 'bounceGentle 2s infinite ease-in-out',
+                        'mic-pulse': 'pulseRing 1.6s infinite'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap');
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #ede9fe 50%, #fef3c7 100%);
+            min-height: 100vh;
+        }
+
+        .heading-font {
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .letter-press {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .letter-press:active {
+            transform: scale(0.92);
+        }
+
+        .custom-glass {
+            background: rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased p-3 md:p-6 pb-20">
+
+<div class="max-w-6xl mx-auto space-y-6">
+    <!-- Header banner -->
+    <header class="custom-glass rounded-3xl p-5 md:p-7 shadow-xl border border-white/60 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-4 text-center md:text-left">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-500 to-brand-purple flex items-center justify-center text-white text-3xl shadow-lg shadow-sky-500/30 animate-bounce-gentle">
+                <i class="fa-solid fa-shapes"></i>
+            </div>
+            <div>
+                <h1 class="heading-font text-2xl md:text-3xl lg:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-600 to-indigo-700">
+                    Phonics Digraph Explorer
+                </h1>
+                <p class="text-slate-600 text-sm md:text-base font-semibold">
+                    Tap characters to hear isolated phonemes, learn the blend & speak aloud to collect stars! 🌟
+                </p>
+            </div>
+        </div>
+
+        <!-- Reward Score & Controls -->
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 bg-amber-100 text-amber-800 px-4 py-2 rounded-2xl font-bold border border-amber-300 shadow-sm">
+                <i class="fa-solid fa-star text-amber-500 text-lg"></i>
+                <span id="starCounter" class="text-lg">0</span> Stars
+            </div>
+            <div class="flex items-center gap-2 bg-emerald-100 text-emerald-800 px-4 py-2 rounded-2xl font-bold border border-emerald-300 shadow-sm">
+                <i class="fa-solid fa-fire text-emerald-500 text-lg"></i>
+                <span id="streakCounter" class="text-lg">0</span> Streak
+            </div>
+            <button onclick="toggleAudioSpeed()" id="speedBtn" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3.5 py-2 rounded-2xl font-bold border border-indigo-200 text-xs transition-colors flex items-center gap-1.5" title="Toggle audio speed">
+                <i class="fa-solid fa-gauge-high"></i>
+                <span id="speedLabel">Normal</span>
+            </button>
+        </div>
+    </header>
+
+    <nav class="custom-glass rounded-2xl p-4 shadow-md border border-white/60">
+        <div class="flex items-center justify-between mb-3 px-1">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <i class="fa-solid fa-layer-group mr-1.5 text-brand-500"></i>Choose Digraph Set (14 Categories):
+            </span>
+            <span class="text-xs font-bold text-sky-700 bg-sky-100 px-2.5 py-1 rounded-full">
+                20+ Words Each
+            </span>
+        </div>
+        <div id="digraphTabs" class="flex gap-2.5 overflow-x-auto no-scrollbar pb-1 pt-1">
+            <!-- Tabs injected dynamically via JS -->
+        </div>
+    </nav>
+
+    <main class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Interactive Letter Lab & Words Grid (Left/Center) -->
+        <section class="lg:col-span-7 flex flex-col gap-6">
+            
+            <!-- Phoneme Sound Synthesizer Card -->
+            <div class="custom-glass rounded-3xl p-6 shadow-xl border border-white/80">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-extrabold tracking-wide uppercase text-indigo-700 bg-indigo-50 px-3 py-1 rounded-xl">
+                        Sound Builder (Tap each part!)
+                    </span>
+                    <span id="digraphRule" class="text-xs font-medium text-slate-500 max-w-xs text-right truncate"></span>
+                </div>
+
+                <!-- Letter and Blended Sound Interactive Buttons -->
+                <div class="bg-gradient-to-b from-sky-50 to-indigo-50/50 rounded-2xl p-6 border border-sky-100 flex flex-col items-center justify-center gap-4">
+                    <div id="soundEquation" class="flex items-center justify-center flex-wrap gap-3 sm:gap-4">
+                        <!-- Dynamic letter buttons injected here -->
+                    </div>
+
+                    <div id="subVariantToggleContainer" class="hidden flex gap-2 pt-2">
+                        <!-- For variations like 'ee' vs 'ea', or 'oo' short/long -->
+                    </div>
+
+                    <p id="soundExplanation" class="text-center text-sm md:text-base font-semibold text-slate-700 mt-1 max-w-md">
+                        Tap the letter boxes above to explore!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Words List with 20+ Examples -->
+            <div class="custom-glass rounded-3xl p-6 shadow-xl border border-white/80 flex-1 flex flex-col">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                    <div>
+                        <h2 class="heading-font text-xl font-bold text-slate-800 flex items-center gap-2">
+                            <span>Word Bank</span>
+                            <span id="bankCountBadge" class="text-xs bg-brand-500 text-white font-bold px-2 py-0.5 rounded-full">20 Words</span>
+                        </h2>
+                        <p class="text-xs text-slate-500 font-semibold">Touch any card to hear it pronounced or practice it orally!</p>
+                    </div>
+
+                    <!-- Search Filter inside bank -->
+                    <div class="relative">
+                        <input type="text" id="wordSearchInput" placeholder="Search words..." 
+                            class="pl-8 pr-3 py-1.5 text-sm bg-white/90 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 w-full sm:w-44 transition-all">
+                        <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
+                    </div>
+                </div>
+
+                <!-- Word Card Grid -->
+                <div id="wordsContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[460px] overflow-y-auto pr-1">
+                    <!-- Word cards injected via JS -->
+                </div>
+            </div>
+        </section>
+
+        <section class="lg:col-span-5 flex flex-col gap-6">
+            <div class="custom-glass rounded-3xl p-6 shadow-xl border border-white/80 flex-1 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
+                            <h2 class="heading-font text-xl font-bold text-slate-800">Oral Speech Matcher</h2>
+                        </div>
+                        <span class="text-xs font-bold text-purple-700 bg-purple-100 px-2.5 py-1 rounded-full">
+                            Voice Powered
+                        </span>
+                    </div>
+
+                    <!-- Practice Flashcard -->
+                    <div class="relative bg-gradient-to-br from-indigo-500 via-brand-600 to-sky-500 rounded-3xl p-7 text-white text-center shadow-lg overflow-hidden flex flex-col items-center justify-center min-h-[220px]">
+                        <!-- Decorative background bubbles -->
+                        <div class="absolute -right-6 -bottom-6 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+                        <div class="absolute -left-6 -top-6 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+
+                        <span class="text-xs font-bold tracking-widest uppercase bg-white/20 px-3 py-1 rounded-full mb-3 backdrop-blur-sm">
+                            Word to repeat aloud:
+                        </span>
+
+                        <!-- Target display with digraph styling -->
+                        <div id="activePracticeWordDisplay" class="heading-font text-5xl md:text-6xl font-extrabold tracking-wide drop-shadow-md my-1">
+                            ---
+                        </div>
+
+                        <!-- Meaning / hint icon -->
+                        <p id="activePracticePhoneticHint" class="text-sky-100 font-semibold text-sm mt-2 flex items-center gap-1.5">
+                            <i class="fa-solid fa-lightbulb text-amber-300"></i>
+                            <span>Tap "Hear Word" or speak now!</span>
+                        </p>
+
+                        <button onclick="speakTargetWord()" class="mt-4 bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-4 py-1.5 rounded-full backdrop-blur-sm border border-white/30 transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-volume-high"></i> Hear Word
+                        </button>
+                    </div>
+
+                    <!-- Voice Recognition Action -->
+                    <div class="mt-6 flex flex-col items-center justify-center gap-4">
+                        <button id="micBtn" onclick="toggleMicrophone()" class="w-20 h-20 rounded-full bg-gradient-to-tr from-brand-500 to-indigo-600 hover:from-brand-600 hover:to-indigo-700 text-white text-3xl shadow-xl flex items-center justify-center cursor-pointer transition-all transform active:scale-95 group">
+                            <i id="micIcon" class="fa-solid fa-microphone transition-transform group-hover:scale-110"></i>
+                        </button>
+
+                        <p id="micStatusText" class="text-sm font-bold text-slate-600">
+                            Tap the microphone and read the word
+                        </p>
+                    </div>
+
+                    <!-- Live Transcription & Match Feedback Area -->
+                    <div id="feedbackBox" class="mt-5 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center min-h-[90px] flex flex-col items-center justify-center transition-all">
+                        <p class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1">Your Pronunciation Result</p>
+                        <p id="transcribedResult" class="text-sm text-slate-600 font-medium italic">"Waiting for voice input..."</p>
+                        <p id="verdictText" class="text-base font-extrabold mt-1 text-slate-800"></p>
+                    </div>
+                </div>
+
+                <!-- Footer Flashcard Navigation -->
+                <div class="pt-6 border-t border-slate-200 flex items-center justify-between gap-3 mt-4">
+                    <button onclick="previousWord()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-chevron-left text-xs"></i> Prev
+                    </button>
+                    <button onclick="pickRandomWord()" class="px-4 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold text-sm transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-shuffle text-xs"></i> Random
+                    </button>
+                    <button onclick="nextWord()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition-colors flex items-center gap-2 shadow-md">
+                        Next <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Support modal notification box -->
+    <div id="noticeToast" class="fixed bottom-6 right-6 max-w-sm custom-glass p-4 rounded-2xl shadow-2xl border border-sky-200 transform translate-y-32 opacity-0 transition-all duration-300 pointer-events-none flex items-start gap-3 z-50">
+        <div id="toastIcon" class="w-9 h-9 rounded-xl bg-brand-500 text-white flex items-center justify-center flex-shrink-0 text-base">
+            <i class="fa-solid fa-info"></i>
+        </div>
+        <div>
+            <h4 id="toastTitle" class="text-sm font-bold text-slate-800">Notification</h4>
+            <p id="toastMessage" class="text-xs text-slate-600 font-medium mt-0.5">Notification body</p>
+        </div>
+    </div>
+</div>
+
+<script>
+const DIGRAPH_DATABASE = {
+    "ai": {
+        id: "ai",
+        label: "ai",
+        category: "Vowel Digraph",
+        rule: "When two vowels go walking, the first one does the talking! (Long A)",
+        chars: [
+            { letter: "a", soundText: "ah", description: "Short vowel sound /æ/ as in apple" },
+            { letter: "i", soundText: "ih", description: "Short vowel sound /ɪ/ as in igloo" }
+        ],
+        digraphs: [
+            { blend: "ai", soundText: "ay", label: "ai", phoneticKey: "long-a", description: "Long A sound /eɪ/ as in rain" }
+        ],
+        words: [
+            { word: "rain", meaning: "Water falling from clouds 🌧️" },
+            { word: "tail", meaning: "Back part of an animal 🐕" },
+            { word: "sail", meaning: "Boat fabric for wind ⛵" },
+            { word: "wait", meaning: "Stay until something happens ⏳" },
+            { word: "pain", meaning: "Hurting feeling 🩹" },
+            { word: "nail", meaning: "Fingernail or metal pin 💅" },
+            { word: "mail", meaning: "Letters and packages ✉️" },
+            { word: "main", meaning: "The biggest or central part 🌟" },
+            { word: "gain", meaning: "To get or receive 📈" },
+            { word: "bait", meaning: "Food used to catch fish 🪱" },
+            { word: "hail", meaning: "Frozen rain pellets 🧊" },
+            { word: "rail", meaning: "Train track metal bar 🛤️" },
+            { word: "brain", meaning: "Organ we use to think 🧠" },
+            { word: "drain", meaning: "Pipe where water flows out 🚰" },
+            { word: "train", meaning: "Choo-choo railway vehicle 🚂" },
+            { word: "chain", meaning: "Connected metal links ⛓️" },
+            { word: "stain", meaning: "Spot on clothes 🧼" },
+            { word: "snail", meaning: "Slow animal with shell 🐌" },
+            { word: "paint", meaning: "Colorful liquid art 🎨" },
+            { word: "claim", meaning: "State something is true 🗣️" },
+            { word: "afraid", meaning: "Feeling scared 😨" },
+            { word: "praise", meaning: "Saying good job! 👏" }
+        ]
+    },
+    "oa": {
+        id: "oa",
+        label: "oa",
+        category: "Vowel Digraph",
+        rule: "Letters 'o' and 'a' join to make the long 'O' sound! (/oʊ/)",
+        chars: [
+            { letter: "o", soundText: "aw", description: "Short vowel sound /ɒ/ as in octopus" },
+            { letter: "a", soundText: "ah", description: "Short vowel sound /æ/ as in apple" }
+        ],
+        digraphs: [
+            { blend: "oa", soundText: "oh", label: "oa", phoneticKey: "long-o", description: "Long O sound /oʊ/ as in boat" }
+        ],
+        words: [
+            { word: "boat", meaning: "Water vehicle ⛵" },
+            { word: "coat", meaning: "Warm jacket for winter 🧥" },
+            { word: "goat", meaning: "Horned farm animal 🐐" },
+            { word: "soap", meaning: "Wash with bubbles 🧼" },
+            { word: "road", meaning: "Path cars drive on 🛣️" },
+            { word: "load", meaning: "Heavy cargo to carry 📦" },
+            { word: "toad", meaning: "Leaping amphibian 🐸" },
+            { word: "foam", meaning: "Fluffy soap froth 🫧" },
+            { word: "roam", meaning: "Wander around freely 🧭" },
+            { word: "coal", meaning: "Black fuel rock 🪨" },
+            { word: "goal", meaning: "Soccer ball in net! ⚽" },
+            { word: "soak", meaning: "Get totally wet 💦" },
+            { word: "float", meaning: "Rest on top of water 🛟" },
+            { word: "toast", meaning: "Crispy warm bread 🍞" },
+            { word: "roast", meaning: "Cooked in the oven 🍗" },
+            { word: "coast", meaning: "Land right by the ocean 🏖️" },
+            { word: "cloak", meaning: "Magical cape 🦸" },
+            { word: "throat", meaning: "Inside of your neck 🧣" },
+            { word: "oak", meaning: "Strong leafy tree 🌳" },
+            { word: "coach", meaning: "Sports team leader 🧢" },
+            { word: "boast", meaning: "Bragging with pride 🗣️" }
+        ]
+    },
+    "ie": {
+        id: "ie",
+        label: "ie",
+        category: "Vowel Digraph",
+        rule: "Produces the long 'I' sound /aɪ/ as in pie, or occasionally long E.",
+        chars: [
+            { letter: "i", soundText: "ih", description: "Short sound /ɪ/ as in ink" },
+            { letter: "e", soundText: "eh", description: "Short sound /ɛ/ as in egg" }
+        ],
+        digraphs: [
+            { blend: "ie", soundText: "eye", label: "ie", phoneticKey: "long-i", description: "Long I sound /aɪ/ as in pie" }
+        ],
+        words: [
+            { word: "pie", meaning: "Delicious baked sweet dessert 🥧" },
+            { word: "tie", meaning: "Fancy neck accessory 👔" },
+            { word: "lie", meaning: "Rest flat on bed 🛏️" },
+            { word: "die", meaning: "Single playing dice 🎲" },
+            { word: "cried", meaning: "Shed happy or sad tears 😢" },
+            { word: "fried", meaning: "Cooked in tasty oil 🍳" },
+            { word: "tried", meaning: "Attempted your best ⭐" },
+            { word: "dried", meaning: "No longer wet ☀️" },
+            { word: "flies", meaning: "Buzzing insects 🪰" },
+            { word: "spies", meaning: "Secret detectives 🕵️" },
+            { word: "skies", meaning: "The blue open heavens ☁️" },
+            { word: "untie", meaning: "Loosen shoe laces 👟" },
+            { word: "magpie", meaning: "Clever black and white bird 🐦" },
+            { word: "necktie", meaning: "Formal neck dresswear 👔" },
+            { word: "allies", meaning: "Helpful partners and friends 🤝" },
+            { word: "replied", meaning: "Answered a question 💬" },
+            { word: "denied", meaning: "Declared not true 🙅" },
+            { word: "butterflies", meaning: "Colorful winged insects 🦋" },
+            { word: "fries", meaning: "Crispy potato sticks 🍟" },
+            { word: "cries", meaning: "Loud joyful shouts 📢" },
+            { word: "dries", meaning: "Takes the water away 🌬️" }
+        ]
+    },
+    "ee/ea": {
+        id: "ee/ea",
+        label: "ee / ea",
+        category: "Vowel Digraph Team",
+        rule: "Both 'ee' and 'ea' commonly share the sweet long 'E' sound! (/iː/)",
+        chars: [
+            { letter: "ee", soundText: "ee", description: "Double E team" },
+            { letter: "ea", soundText: "ee", description: "E and A vowel team" }
+        ],
+        digraphs: [
+            { blend: "ee", soundText: "ee", label: "ee sound", phoneticKey: "long-e", description: "Long E sound as in bee" },
+            { blend: "ea", soundText: "ee", label: "ea sound", phoneticKey: "long-e", description: "Long E sound as in leaf" }
+        ],
+        words: [
+            { word: "see", meaning: "Look with eyes 👀" },
+            { word: "bee", meaning: "Honey maker 🐝" },
+            { word: "tree", meaning: "Tall woody plant 🌲" },
+            { word: "feet", meaning: "What we stand on 🦶" },
+            { word: "seed", meaning: "Little plant starter 🌱" },
+            { word: "deep", meaning: "Far down into ocean 🌊" },
+            { word: "meet", meaning: "Say hello to someone 🤝" },
+            { word: "green", meaning: "Color of fresh grass 🟢" },
+            { word: "sleep", meaning: "Nighttime dreaming 😴" },
+            { word: "sweet", meaning: "Sugary treat 🍬" },
+            { word: "tea", meaning: "Warm soothing drink 🍵" },
+            { word: "sea", meaning: "Huge salty ocean 🌊" },
+            { word: "leaf", meaning: "Green foliage on twig 🍃" },
+            { word: "meat", meaning: "Protein food 🥩" },
+            { word: "read", meaning: "Look through a book 📖" },
+            { word: "beat", meaning: "Musical drum rhythm 🥁" },
+            { word: "clean", meaning: "Sparkling and tidy ✨" },
+            { word: "beach", meaning: "Sandy shore 🏖️" },
+            { word: "dream", meaning: "Nighttime fantasy 💭" },
+            { word: "steam", meaning: "Hot water vapor ♨️" },
+            { word: "peach", meaning: "Fuzzy sweet fruit 🍑" },
+            { word: "team", meaning: "Group working together 🏆" }
+        ]
+    },
+    "or": {
+        id: "or",
+        label: "or",
+        category: "R-Controlled Vowel",
+        rule: "The bossy R changes the sound of O to 'or'! (/ɔːr/)",
+        chars: [
+            { letter: "o", soundText: "aw", description: "Short letter O sound" },
+            { letter: "r", soundText: "er", description: "Consonant R roar sound" }
+        ],
+        digraphs: [
+            { blend: "or", soundText: "oar", label: "or", phoneticKey: "or-sound", description: "R-controlled blend as in fork" }
+        ],
+        words: [
+            { word: "fork", meaning: "Eating utensil with prongs 🍴" },
+            { word: "cork", meaning: "Stopper for bottles 🍾" },
+            { word: "corn", meaning: "Yellow sweet vegetable 🌽" },
+            { word: "horn", meaning: "Beep beep vehicle noise 📯" },
+            { word: "born", meaning: "Brought into the world 👶" },
+            { word: "torn", meaning: "Ripped paper or fabric 📄" },
+            { word: "cord", meaning: "Electric wire or string 🔌" },
+            { word: "storm", meaning: "Rain, thunder and lightning ⛈️" },
+            { word: "sport", meaning: "Athletic active game 🏀" },
+            { word: "short", meaning: "Not tall 📏" },
+            { word: "torch", meaning: "Handheld flame or flashlight 🔦" },
+            { word: "north", meaning: "Compass direction up 🧭" },
+            { word: "horse", meaning: "Galloping strong animal 🐎" },
+            { word: "porch", meaning: "Covered house entrance 🏡" },
+            { word: "acorn", meaning: "Nut from an oak tree 🌰" },
+            { word: "forest", meaning: "Woods full of trees 🌲" },
+            { word: "morning", meaning: "Early sunny start to day 🌅" },
+            { word: "sword", meaning: "Knight's shiny blade ⚔️" },
+            { word: "fort", meaning: "Strong play castle 🏰" },
+            { word: "sort", meaning: "Organize into groups 🗂️" },
+            { word: "scorch", meaning: "Burn slightly with heat 🔥" }
+        ]
+    },
+    "ng": {
+        id: "ng",
+        label: "ng",
+        category: "Nasal Consonant Digraph",
+        rule: "Air travels through your nose to make the sing-song 'ng' sound! (/ŋ/)",
+        chars: [
+            { letter: "n", soundText: "nuh", description: "N nasal sound" },
+            { letter: "g", soundText: "guh", description: "Hard G sound" }
+        ],
+        digraphs: [
+            { blend: "ng", soundText: "eng", label: "ng", phoneticKey: "ng-sound", description: "Velar nasal sound as in ring" }
+        ],
+        words: [
+            { word: "ring", meaning: "Golden finger jewelry 💍" },
+            { word: "sing", meaning: "Make melody with voice 🎤" },
+            { word: "king", meaning: "Royal leader with crown 👑" },
+            { word: "wing", meaning: "Bird body part to fly 🪶" },
+            { word: "song", meaning: "Musical tune to enjoy 🎵" },
+            { word: "long", meaning: "Great in length 📏" },
+            { word: "bang", meaning: "Loud sudden booming noise 💥" },
+            { word: "hang", meaning: "Suspending picture on wall 🖼️" },
+            { word: "lung", meaning: "Organ for breathing air 🫁" },
+            { word: "rung", meaning: "Step on a ladder 🪜" },
+            { word: "strong", meaning: "Having big muscles 💪" },
+            { word: "spring", meaning: "Season of blooming flowers 🌷" },
+            { word: "string", meaning: "Thin yarn or twine 🧵" },
+            { word: "bring", meaning: "Carry something to someone 🎁" },
+            { word: "swing", meaning: "Fun playground seat 🪢" },
+            { word: "cling", meaning: "Hold on very tightly 🧗" },
+            { word: "sting", meaning: "Bumblebee bite 🐝" },
+            { word: "fang", meaning: "Sharp animal tooth 🦷" },
+            { word: "gong", meaning: "Round brass instrument 🔔" },
+            { word: "belong", meaning: "Be part of a family 👨‍👩‍👧" },
+            { word: "young", meaning: "Full of youthful energy 🧒" }
+        ]
+    },
+    "ch": {
+        id: "ch",
+        label: "ch",
+        category: "Consonant Digraph",
+        rule: "Catchy train sound 'ch-ch-ch'! (/tʃ/)",
+        chars: [
+            { letter: "c", soundText: "kuh", description: "Hard C sound /k/" },
+            { letter: "h", soundText: "huh", description: "Breathy H sound /h/" }
+        ],
+        digraphs: [
+            { blend: "ch", soundText: "chuh", label: "ch", phoneticKey: "ch-sound", description: "Affricate sound as in cheese" }
+        ],
+        words: [
+            { word: "chip", meaning: "Crispy potato snack 🥔" },
+            { word: "chin", meaning: "Part of face below lips 😀" },
+            { word: "chop", meaning: "Cut with a knife 🔪" },
+            { word: "chat", meaning: "Friendly talking talk 💬" },
+            { word: "rich", meaning: "Having great wealth 💎" },
+            { word: "much", meaning: "A large amount 🍫" },
+            { word: "such", meaning: "Of that specific kind ✨" },
+            { word: "inch", meaning: "Small unit of length 📐" },
+            { word: "bench", meaning: "Long park wooden seat 🪵" },
+            { word: "lunch", meaning: "Delicious midday meal 🥪" },
+            { word: "punch", meaning: "Fruity drink party bowl 🍹" },
+            { word: "munch", meaning: "Chew happily on snack 🍿" },
+            { word: "chest", meaning: "Treasure box or body torso 🧰" },
+            { word: "chess", meaning: "Smart king & queen boardgame ♟️" },
+            { word: "chick", meaning: "Cute baby yellow bird 🐥" },
+            { word: "chill", meaning: "Cool refreshing breeze ❄️" },
+            { word: "chime", meaning: "Gentle ringing bell 🎐" },
+            { word: "chart", meaning: "Visual diagram of facts 📊" },
+            { word: "chain", meaning: "Linked metallic loops ⛓️" },
+            { word: "beach", meaning: "Sandy ocean getaway 🏖️" },
+            { word: "peach", meaning: "Soft fuzzy fruit 🍑" }
+        ]
+    },
+    "oo": {
+        id: "oo",
+        label: "oo",
+        category: "Dual Digraph (Short & Long)",
+        rule: "Has two sounds: Long /uː/ as in moon, and short /ʊ/ as in book!",
+        chars: [
+            { letter: "o", soundText: "aw", description: "Letter O sound" },
+            { letter: "o", soundText: "aw", description: "Letter O sound" }
+        ],
+        digraphs: [
+            { blend: "oo (long)", soundText: "ooh", label: "oo (long: moon)", phoneticKey: "long-oo", description: "Long sound /uː/ as in moon" },
+            { blend: "oo (short)", soundText: "uh", label: "oo (short: book)", phoneticKey: "short-oo", description: "Short sound /ʊ/ as in book" }
+        ],
+        words: [
+            { word: "moon", meaning: "Glowing night orb in sky 🌕" },
+            { word: "spoon", meaning: "Utensil for warm soup 🥄" },
+            { word: "food", meaning: "Delicious meals to eat 🍕" },
+            { word: "pool", meaning: "Cool water for swimming 🏊" },
+            { word: "cool", meaning: "Nice and chilled 🕶️" },
+            { word: "tool", meaning: "Hammer or wrench to build 🔨" },
+            { word: "roof", meaning: "Top covering of house 🏠" },
+            { word: "root", meaning: "Tree anchor in dirt 🪴" },
+            { word: "boot", meaning: "Rugged waterproof shoe 🥾" },
+            { word: "zoom", meaning: "Speed rapidly across 🏎️" },
+            { word: "book", meaning: "Pages bound to read 📚" },
+            { word: "cook", meaning: "Chef preparing meals 🍳" },
+            { word: "look", meaning: "Inspect with eager eyes 🔍" },
+            { word: "hook", meaning: "Curved metal catch 🪝" },
+            { word: "took", meaning: "Picked up and carried 🎒" },
+            { word: "wood", meaning: "Sturdy material from trees 🪵" },
+            { word: "foot", meaning: "Step forward on feet 🦶" },
+            { word: "wool", meaning: "Warm fluffy sheep fleece 🐑" },
+            { word: "good", meaning: "Wonderful and kind 👍" },
+            { word: "hood", meaning: "Head cover on sweatshirt 🧥" },
+            { word: "broom", meaning: "Sweeper for clean floor 🧹" },
+            { word: "bloom", meaning: "Flower petals opening 🌸" }
+        ]
+    },
+    "sh": {
+        id: "sh",
+        label: "sh",
+        category: "Consonant Digraph",
+        rule: "Put a finger to your lips and say 'shhhhh'! (/ʃ/)",
+        chars: [
+            { letter: "s", soundText: "sss", description: "Hissing S sound /s/" },
+            { letter: "h", soundText: "huh", description: "Gentle H sound /h/" }
+        ],
+        digraphs: [
+            { blend: "sh", soundText: "shhh", label: "sh", phoneticKey: "sh-sound", description: "Quiet hush sound /ʃ/ as in ship" }
+        ],
+        words: [
+            { word: "ship", meaning: "Large sailing vessel 🚢" },
+            { word: "shop", meaning: "Store to buy goods 🛒" },
+            { word: "fish", meaning: "Swimming underwater pet 🐟" },
+            { word: "dish", meaning: "Plate for dinner 🍽️" },
+            { word: "wish", meaning: "Hope upon a shooting star 🌠" },
+            { word: "mash", meaning: "Crush potatoes smooth 🥔" },
+            { word: "dash", meaning: "Sprint as fast as you can 🏃" },
+            { word: "cash", meaning: "Paper money notes 💵" },
+            { word: "bush", meaning: "Low leafy green shrub 🌿" },
+            { word: "rush", meaning: "Hurry with speed ⏰" },
+            { word: "push", meaning: "Press forward with hands 🫸" },
+            { word: "shed", meaning: "Small backyard storage 🛖" },
+            { word: "shoe", meaning: "Comfortable foot attire 👟" },
+            { word: "shut", meaning: "Close the door tight 🚪" },
+            { word: "shot", meaning: "Basketball toss at hoop 🏀" },
+            { word: "shark", meaning: "Sharp toothed ocean swimmer 🦈" },
+            { word: "share", meaning: "Give portion to buddy 🤝" },
+            { word: "shirt", meaning: "Button-up cloth top 👕" },
+            { word: "short", meaning: "Not very long 📏" },
+            { word: "shake", meaning: "Vibrate or mix a smoothie 🥤" },
+            { word: "shell", meaning: "Beach ocean treasure 🐚" },
+            { word: "shine", meaning: "Bright glittery sparkle ✨" }
+        ]
+    },
+    "th": {
+        id: "th",
+        label: "th",
+        category: "Dual Digraph (This vs That)",
+        rule: "Has two sounds: Voiced /ð/ as in 'this' and voiceless /θ/ as in 'thumb'!",
+        chars: [
+            { letter: "t", soundText: "tuh", description: "T tapping sound /t/" },
+            { letter: "h", soundText: "huh", description: "Breathy H sound /h/" }
+        ],
+        digraphs: [
+            { blend: "th (voiced)", soundText: "thuh", label: "th (voiced: this)", phoneticKey: "voiced-th", description: "Vocal cords vibrate: 'this, that'" },
+            { blend: "th (unvoiced)", soundText: "thff", label: "th (unvoiced: thumb)", phoneticKey: "unvoiced-th", description: "Soft air whisper: 'thumb, bath'" }
+        ],
+        words: [
+            { word: "this", meaning: "The thing right here 👈" },
+            { word: "that", meaning: "The thing over there 👉" },
+            { word: "then", meaning: "At that upcoming moment ⏱️" },
+            { word: "them", meaning: "Those people together 👥" },
+            { word: "they", meaning: "Group of friends 👫" },
+            { word: "with", meaning: "Together alongside 🤝" },
+            { word: "moth", meaning: "Night butterfly friend 🦋" },
+            { word: "path", meaning: "Trail through a park 🌲" },
+            { word: "bath", meaning: "Soaking clean in tub 🛁" },
+            { word: "math", meaning: "Numbers and adding ➕" },
+            { word: "thin", meaning: "Not bulky or wide ✏️" },
+            { word: "thick", meaning: "Heavy and stout 📚" },
+            { word: "thump", meaning: "Dull heavy heartbeat beat 💓" },
+            { word: "thing", meaning: "An item or object 🎁" },
+            { word: "think", meaning: "Ponder with your brain 💡" },
+            { word: "teeth", meaning: "Bright pearly white smile 🦷" },
+            { word: "cloth", meaning: "Woven fabric rag 🧺" },
+            { word: "thumb", meaning: "Thumbs-up positive sign 👍" },
+            { word: "north", meaning: "Top direction of map 🧭" },
+            { word: "south", meaning: "Bottom direction on compass ⬇️" },
+            { word: "earth", meaning: "Our beautiful home planet 🌍" },
+            { word: "feather", meaning: "Light soft bird plumage 🪶" }
+        ]
+    },
+    "qu": {
+        id: "qu",
+        label: "qu",
+        category: "Consonant Companion",
+        rule: "Q is never without its best friend U! Together they sound 'kw'! (/kw/)",
+        chars: [
+            { letter: "q", soundText: "kuh", description: "Letter Q sound" },
+            { letter: "u", soundText: "wuh", description: "Vowel U working as /w/" }
+        ],
+        digraphs: [
+            { blend: "qu", soundText: "kwuh", label: "qu", phoneticKey: "qu-sound", description: "Blend sound /kw/ as in queen" }
+        ],
+        words: [
+            { word: "quick", meaning: "Fast like lightning ⚡" },
+            { word: "quack", meaning: "Funny sound a duck makes 🦆" },
+            { word: "quit", meaning: "Stop doing an action 🛑" },
+            { word: "quiz", meaning: "Fun puzzle questions 📝" },
+            { word: "queen", meaning: "Royal leader with crown 👑" },
+            { word: "quilt", meaning: "Cozy stitched blanket 🛌" },
+            { word: "quest", meaning: "Hero's noble adventure 🗺️" },
+            { word: "quiet", meaning: "Hush, silence please 🤫" },
+            { word: "quote", meaning: "Words someone spoke 💬" },
+            { word: "quake", meaning: "Ground shaking tremor 🫨" },
+            { word: "quart", meaning: "Bottle measure of milk 🥛" },
+            { word: "quill", meaning: "Old-fashioned feather pen ✒️" },
+            { word: "squid", meaning: "Ten-armed sea swimmer 🦑" },
+            { word: "equal", meaning: "Exactly the same amount 🟰" },
+            { word: "liquid", meaning: "Fluid water that pours 💧" },
+            { word: "squad", meaning: "Close group of buddies 🧑‍🤝‍🧑" },
+            { word: "quench", meaning: "Satisfy your deep thirst 🥤" },
+            { word: "quiver", meaning: "Shiver from the chilly wind 🥶" },
+            { word: "quail", meaning: "Small patterned ground bird 🐦" },
+            { word: "quarry", meaning: "Large open stone pit ⛏️" },
+            { word: "squash", meaning: "Yellow autumn vegetable 🎃" }
+        ]
+    },
+    "ou": {
+        id: "ou",
+        label: "ou",
+        category: "Diphthong / Digraph",
+        rule: "Say 'Ouch!' when you touch a prickly sticker! (/aʊ/)",
+        chars: [
+            { letter: "o", soundText: "aw", description: "Letter O sound" },
+            { letter: "u", soundText: "uh", description: "Letter U sound" }
+        ],
+        digraphs: [
+            { blend: "ou", soundText: "oww", label: "ou", phoneticKey: "ou-sound", description: "Diphthong /aʊ/ as in out or loud" }
+        ],
+        words: [
+            { word: "out", meaning: "Outside in the fresh yard 🚪" },
+            { word: "shout", meaning: "Call out in high cheer 📢" },
+            { word: "cloud", meaning: "Fluffy white sky vapor ☁️" },
+            { word: "proud", meaning: "Feeling pleased with achievement 🦚" },
+            { word: "loud", meaning: "High volume noise 🔊" },
+            { word: "round", meaning: "Shaped like a ball 🟢" },
+            { word: "sound", meaning: "Vibrations our ears hear 🎧" },
+            { word: "pound", meaning: "Bang with hammer rhythm 🔨" },
+            { word: "hound", meaning: "Loyal sniffing dog 🐕" },
+            { word: "found", meaning: "Discovered hidden treasure 🔍" },
+            { word: "mouse", meaning: "Cute tiny cheese nibbler 🐭" },
+            { word: "house", meaning: "Loving home we live in 🏡" },
+            { word: "mouth", meaning: "Lips, teeth, and tongue 👄" },
+            { word: "south", meaning: "Warm direction on compass 🧭" },
+            { word: "couch", meaning: "Comfy soft living room sofa 🛋️" },
+            { word: "pouch", meaning: "Kangaroo pocket for joey 🦘" },
+            { word: "count", meaning: "Say 1, 2, 3 in math 🔢" },
+            { word: "mount", meaning: "Climb up onto bicycle 🚵" },
+            { word: "spout", meaning: "Teapot water pourer 🫖" },
+            { word: "scout", meaning: "Pathfinder explorer 🏕️" },
+            { word: "bounce", meaning: "Rebound like rubber ball 🏀" }
+        ]
+    },
+    "oi": {
+        id: "oi",
+        label: "oi",
+        category: "Diphthong / Digraph",
+        rule: "Make the joyous 'oy' sound, as in flip a shiny coin! (/ɔɪ/)",
+        chars: [
+            { letter: "o", soundText: "aw", description: "Letter O sound" },
+            { letter: "i", soundText: "ih", description: "Letter I sound" }
+        ],
+        digraphs: [
+            { blend: "oi", soundText: "oy", label: "oi", phoneticKey: "oi-sound", description: "Gliding vowel /ɔɪ/ as in coin" }
+        ],
+        words: [
+            { word: "coin", meaning: "Shiny silver money token 🪙" },
+            { word: "join", meaning: "Come together in group 🤝" },
+            { word: "soil", meaning: "Rich brown planting earth 🌱" },
+            { word: "boil", meaning: "Bubbling hot water 🫖" },
+            { word: "toil", meaning: "Work very hard and long 🛠️" },
+            { word: "foil", meaning: "Crinkly silver food wrap 🍱" },
+            { word: "coil", meaning: "Spiral wound spring 🌀" },
+            { word: "point", meaning: "Aim with your pointer finger ☝️" },
+            { word: "joint", meaning: "Knee or elbow bend 🦵" },
+            { word: "spoil", meaning: "Ruin or go bad 🥀" },
+            { word: "moist", meaning: "Slightly wet like cake 🧁" },
+            { word: "hoist", meaning: "Lift up high with crane 🏗️" },
+            { word: "voice", meaning: "Sound from singing throat 🎤" },
+            { word: "choice", meaning: "Picking between options ⚖️" },
+            { word: "noise", meaning: "Loud sounds all around 📢" },
+            { word: "avoid", meaning: "Steer safely clear of 🚧" },
+            { word: "poison", meaning: "Toxic harmful substance ⚠️" },
+            { word: "rejoice", meaning: "Celebrate with pure joy 🎉" },
+            { word: "oink", meaning: "Playful pig greeting 🐷" },
+            { word: "oil", meaning: "Smooth engine lubricant 🛢️" },
+            { word: "appoint", meaning: "Select someone for honor 📜" }
+        ]
+    },
+    "ew/ue": {
+        id: "ew/ue",
+        label: "ew / ue",
+        category: "Vowel Teams",
+        rule: "Makes the 'oo' or 'yoo' sound as in 'flew', 'glue', or 'blue'! (/uː/)",
+        chars: [
+            { letter: "ew", soundText: "ooh", description: "E and W team as in blew" },
+            { letter: "ue", soundText: "ooh", description: "U and E team as in blue" }
+        ],
+        digraphs: [
+            { blend: "ew", soundText: "ooh", label: "ew", phoneticKey: "ew-blend", description: "Blend sound as in few or blew" },
+            { blend: "ue", soundText: "ooh", label: "ue", phoneticKey: "ue-blend", description: "Blend sound as in clue or blue" }
+        ],
+        words: [
+            { word: "few", meaning: "A small handful of things 🤏" },
+            { word: "new", meaning: "Fresh and never used before 🎁" },
+            { word: "grew", meaning: "Got taller and bigger 🌻" },
+            { word: "blew", meaning: "Wind puffed birthday candle 🎂" },
+            { word: "chew", meaning: "Chomp food with teeth 🦷" },
+            { word: "drew", meaning: "Sketched with colored pencil ✏️" },
+            { word: "flew", meaning: "Soared through the blue sky 🦅" },
+            { word: "stew", meaning: "Warm hearty vegetable soup 🍲" },
+            { word: "crew", meaning: "Team on a pirate ship ⚓" },
+            { word: "screw", meaning: "Turnable hardware fastener 🔩" },
+            { word: "blue", meaning: "Color of the clear ocean 🔵" },
+            { word: "clue", meaning: "Hint that solves mystery 🕵️" },
+            { word: "glue", meaning: "Sticky craft liquid 🧴" },
+            { word: "true", meaning: "Real, honest and correct ✅" },
+            { word: "due", meaning: "Expected time for homework ⏰" },
+            { word: "sue", meaning: "Ask judge in courtroom ⚖️" },
+            { word: "cue", meaning: "Signal to start performing 🎬" },
+            { word: "fuel", meaning: "Gas that powers rocket 🚀" },
+            { word: "cruel", meaning: "Unkind and mean 🌧️" },
+            { word: "rescue", meaning: "Save from danger heroically 🦸" },
+            { word: "statue", meaning: "Carved stone monument 🗽" }
+        ]
+    }
+};
+
+// Global App State
+let currentDigraphKey = "sh";
+let currentPracticeIndex = 0;
+let speechRate = 0.82; // Child phonics clarity rate
+let recognition = null;
+let isListening = false;
+let userStars = parseInt(localStorage.getItem('phonics_stars') || '0', 10);
+let userStreak = parseInt(localStorage.getItem('phonics_streak') || '0', 10);
+
+// Audio Synthesis Controller
+function playAudioPhoneme(textToSay, customRate) {
+    if (!('speechSynthesis' in window)) {
+        showToast("Audio Unsupported", "Your browser does not support Speech Synthesis.", "warning");
+        return;
+    }
+    window.speechSynthesis.cancel(); // Cancel any lingering utterances
+
+    const utter = new SpeechSynthesisUtterance(textToSay);
+    utter.lang = 'en-US';
+    utter.rate = customRate || speechRate;
+    utter.pitch = 1.05; // Slightly higher, friendly pitch for young learners
+    
+    // Select best English natural voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const naturalVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
+    if (naturalVoice) utter.voice = naturalVoice;
+
+    window.speechSynthesis.speak(utter);
+}
+
+// Tone sound effects for gamification feedback
+function playCelebrationSound() {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioCtx.currentTime;
+        
+        // Happy arpeggio chime (C5 -> E5 -> G5 -> C6)
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+            gain.gain.setValueAtTime(0.15, now + idx * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.35);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + idx * 0.08);
+            osc.stop(now + idx * 0.08 + 0.36);
+        });
+    } catch(e) {
+        // Fallback silently if audio context is restricted
+    }
+}
+
+function playRetrySound() {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(320, now);
+        osc.frequency.exponentialRampToValueAtTime(220, now + 0.25);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.26);
+    } catch(e) {}
+}
+
+function initTabs() {
+    const tabsContainer = document.getElementById('digraphTabs');
+    tabsContainer.innerHTML = '';
+    
+    Object.keys(DIGRAPH_DATABASE).forEach(key => {
+        const data = DIGRAPH_DATABASE[key];
+        const btn = document.createElement('button');
+        const isActive = key === currentDigraphKey;
+        
+        btn.className = `px-4 py-2 rounded-2xl text-base font-extrabold flex-shrink-0 transition-all transform active:scale-95 flex items-center gap-2 ${
+            isActive 
+            ? 'bg-gradient-to-r from-brand-500 to-indigo-600 text-white shadow-md shadow-brand-500/30 scale-105' 
+            : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+        }`;
+        
+        btn.innerHTML = `<span>${data.label}</span>`;
+        btn.onclick = () => selectDigraph(key);
+        tabsContainer.appendChild(btn);
+    });
+}
+
+function selectDigraph(key) {
+    currentDigraphKey = key;
+    currentPracticeIndex = 0;
+    document.getElementById('wordSearchInput').value = '';
+    initTabs();
+    renderSoundBuilder();
+    renderWordBank();
+    updatePracticeCard();
+}
+
+function renderSoundBuilder() {
+    const data = DIGRAPH_DATABASE[currentDigraphKey];
+    const eqContainer = document.getElementById('soundEquation');
+    const toggleContainer = document.getElementById('subVariantToggleContainer');
+    const ruleLabel = document.getElementById('digraphRule');
+    const descLabel = document.getElementById('soundExplanation');
+
+    ruleLabel.innerText = data.rule;
+    eqContainer.innerHTML = '';
+    toggleContainer.innerHTML = '';
+    toggleContainer.classList.add('hidden');
+
+    // Render individual characters
+    data.chars.forEach((c, idx) => {
+        const charBtn = document.createElement('button');
+        charBtn.className = "letter-press relative group flex flex-col items-center justify-center w-16 h-20 sm:w-20 sm:h-24 bg-white rounded-2xl border-2 border-sky-300 shadow-md hover:border-brand-500 hover:shadow-lg transition-all";
+        charBtn.innerHTML = `
+            <span class="heading-font text-3xl sm:text-4xl font-extrabold text-brand-600">${c.letter}</span>
+            <span class="text-[10px] sm:text-xs font-bold text-slate-400 mt-1 flex items-center gap-1">
+                <i class="fa-solid fa-volume-high text-[10px] text-brand-400"></i> ${c.soundText}
+            </span>
+        `;
+        charBtn.title = `Listen to individual character: '${c.letter}'`;
+        charBtn.onclick = () => {
+            playAudioPhoneme(c.soundText, 0.7);
+            descLabel.innerHTML = `Isolated sound for <span class="text-brand-600 font-bold text-lg">'${c.letter}'</span>: <em>${c.description}</em>`;
+        };
+        eqContainer.appendChild(charBtn);
+
+        // Add plus operator
+        if (idx < data.chars.length - 1) {
+            const plus = document.createElement('span');
+            plus.className = "heading-font text-2xl sm:text-3xl font-extrabold text-slate-400";
+            plus.innerText = "+";
+            eqContainer.appendChild(plus);
+        }
+    });
+
+    // Add equals operator
+    const equals = document.createElement('span');
+    equals.className = "heading-font text-2xl sm:text-3xl font-extrabold text-brand-500";
+    equals.innerText = "=";
+    eqContainer.appendChild(equals);
+
+    // Render the Combined Digraph Blend Button
+    data.digraphs.forEach((dg, dIdx) => {
+        const blendBtn = document.createElement('button');
+        blendBtn.className = "letter-press relative flex flex-col items-center justify-center min-w-[76px] px-3 h-20 sm:h-24 bg-gradient-to-tr from-amber-400 to-amber-500 rounded-2xl border-2 border-amber-300 shadow-md hover:from-amber-500 hover:to-amber-600 hover:shadow-xl text-white transition-all";
+        blendBtn.innerHTML = `
+            <span class="heading-font text-3xl sm:text-4xl font-extrabold text-amber-950">${dg.label}</span>
+            <span class="text-[10px] sm:text-xs font-bold text-amber-900 mt-1 flex items-center gap-1">
+                <i class="fa-solid fa-volume-high text-[10px]"></i> /${dg.soundText}/
+            </span>
+        `;
+        blendBtn.title = `Listen to digraph sound: '${dg.label}'`;
+        blendBtn.onclick = () => {
+            playAudioPhoneme(dg.soundText, 0.75);
+            descLabel.innerHTML = `Digraph blend sound <span class="text-amber-600 font-bold text-lg">'${dg.label}'</span>: <em>${dg.description}</em>`;
+        };
+        eqContainer.appendChild(blendBtn);
+    });
+
+    descLabel.innerHTML = `Touch <span class="font-bold text-brand-500">individual letters</span> to hear their sounds, then touch the <span class="font-bold text-amber-600">combined digraph</span>!`;
+}
+
+function renderWordBank(filter = '') {
+    const data = DIGRAPH_DATABASE[currentDigraphKey];
+    const container = document.getElementById('wordsContainer');
+    const badge = document.getElementById('bankCountBadge');
+    container.innerHTML = '';
+
+    const filteredWords = data.words.filter(item => item.word.toLowerCase().includes(filter.toLowerCase()));
+    badge.innerText = `${filteredWords.length} Words`;
+
+    if (filteredWords.length === 0) {
+        container.innerHTML = `
+            <div class="col-span-full py-8 text-center text-slate-400 font-semibold">
+                No words match your search. Try another letter!
+            </div>
+        `;
+        return;
+    }
+
+    filteredWords.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = "letter-press bg-white rounded-2xl p-3 border border-slate-200/90 shadow-sm hover:shadow-md hover:border-brand-400 cursor-pointer transition-all flex flex-col justify-between group";
+        
+        // Highlight digraph substring inside word
+        const highlightedHtml = formatDigraphInWord(item.word, currentDigraphKey);
+
+        card.innerHTML = `
+            <div class="flex items-center justify-between">
+                <span class="heading-font text-xl font-bold text-slate-800 tracking-wide">${highlightedHtml}</span>
+                <span class="w-7 h-7 rounded-full bg-sky-50 group-hover:bg-brand-500 text-brand-600 group-hover:text-white flex items-center justify-center text-xs transition-colors">
+                    <i class="fa-solid fa-volume-high"></i>
+                </span>
+            </div>
+            <p class="text-[11px] text-slate-500 font-medium truncate mt-1">${item.meaning}</p>
+        `;
+
+        card.onclick = () => {
+            playAudioPhoneme(item.word, 0.85);
+            // Set as current practice word
+            const originalIndex = data.words.findIndex(w => w.word === item.word);
+            if (originalIndex !== -1) {
+                currentPracticeIndex = originalIndex;
+                updatePracticeCard();
+            }
+        };
+
+        container.appendChild(card);
+    });
+}
+
+// Function to cleanly highlight the digraph part inside the vocabulary words
+function formatDigraphInWord(word, digraphKey) {
+    // Collect possible matching substring chunks (e.g. for "ee/ea", check "ee" and "ea")
+    const targets = digraphKey.includes('/') 
+        ? digraphKey.split('/').map(s => s.trim().toLowerCase()) 
+        : [digraphKey.toLowerCase()];
+
+    for (let target of targets) {
+        const lower = word.toLowerCase();
+        const pos = lower.indexOf(target);
+        if (pos !== -1) {
+            const before = word.substring(0, pos);
+            const match = word.substring(pos, pos + target.length);
+            const after = word.substring(pos + target.length);
+            return `${before}<span class="text-brand-purple font-extrabold underline decoration-2 decoration-brand-purple/60">${match}</span>${after}`;
+        }
+    }
+    return word;
+}
+
+function updatePracticeCard() {
+    const data = DIGRAPH_DATABASE[currentDigraphKey];
+    if (currentPracticeIndex < 0) currentPracticeIndex = data.words.length - 1;
+    if (currentPracticeIndex >= data.words.length) currentPracticeIndex = 0;
+
+    const currentItem = data.words[currentPracticeIndex];
+    const displayElement = document.getElementById('activePracticeWordDisplay');
+    const hintElement = document.getElementById('activePracticePhoneticHint');
+    const feedbackBox = document.getElementById('feedbackBox');
+    const transcribedText = document.getElementById('transcribedResult');
+    const verdictText = document.getElementById('verdictText');
+
+    displayElement.innerHTML = formatDigraphInWord(currentItem.word, currentDigraphKey);
+    hintElement.innerHTML = `<i class="fa-solid fa-lightbulb text-amber-300"></i> ${currentItem.meaning}`;
+
+    // Reset verification states
+    transcribedText.innerText = '"Waiting for voice input..."';
+    transcribedText.className = "text-sm text-slate-500 italic";
+    verdictText.innerText = '';
+    feedbackBox.className = "mt-5 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center min-h-[90px] flex flex-col items-center justify-center transition-all";
+}
+
+function nextWord() {
+    currentPracticeIndex++;
+    updatePracticeCard();
+    speakTargetWord();
+}
+
+function previousWord() {
+    currentPracticeIndex--;
+    updatePracticeCard();
+    speakTargetWord();
+}
+
+function pickRandomWord() {
+    const data = DIGRAPH_DATABASE[currentDigraphKey];
+    currentPracticeIndex = Math.floor(Math.random() * data.words.length);
+    updatePracticeCard();
+    speakTargetWord();
+}
+
+function speakTargetWord() {
+    const data = DIGRAPH_DATABASE[currentDigraphKey];
+    const currentItem = data.words[currentPracticeIndex];
+    playAudioPhoneme(currentItem.word, 0.85);
+}
+
+// Web Speech Recognition Logic
+function setupSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        return null;
+    }
+
+    const rec = new SpeechRecognition();
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.lang = 'en-US';
+    rec.maxAlternatives = 3;
+
+    rec.onstart = () => {
+        isListening = true;
+        const micBtn = document.getElementById('micBtn');
+        const micIcon = document.getElementById('micIcon');
+        const statusText = document.getElementById('micStatusText');
+
+        micBtn.classList.remove('from-brand-500', 'to-indigo-600');
+        micBtn.classList.add('bg-red-500', 'animate-mic-pulse');
+        micIcon.className = "fa-solid fa-waveform animate-pulse";
+        statusText.innerText = "Listening closely... Say the word now!";
+        statusText.className = "text-sm font-extrabold text-red-600 animate-pulse";
+    };
+
+    rec.onresult = (event) => {
+        const results = event.results[0];
+        const primarySpoken = results[0].transcript.toLowerCase().trim();
+        const alternatives = Array.from(results).map(alt => alt.transcript.toLowerCase().trim());
+        
+        handleSpokenWordEvaluation(primarySpoken, alternatives);
+    };
+
+    rec.onerror = (event) => {
+        const statusText = document.getElementById('micStatusText');
+        const transcribedText = document.getElementById('transcribedResult');
+        const verdictText = document.getElementById('verdictText');
+        
+        let errorMsg = "Microphone error. Please try again.";
+        if (event.error === 'not-allowed') {
+            errorMsg = "Microphone access blocked. Please allow permissions in browser.";
+        } else if (event.error === 'no-speech') {
+            errorMsg = "No voice heard. Click mic and speak clearly!";
+        }
+        
+        statusText.innerText = errorMsg;
+        statusText.className = "text-sm font-bold text-amber-600";
+        transcribedText.innerText = `[${event.error}]`;
+        verdictText.innerText = "Tap the microphone to try again!";
+        verdictText.className = "text-sm font-bold text-slate-600 mt-1";
+    };
+
+    rec.onend = () => {
+        isListening = false;
+        const micBtn = document.getElementById('micBtn');
+        const micIcon = document.getElementById('micIcon');
+        const statusText = document.getElementById('micStatusText');
+
+        micBtn.classList.remove('bg-red-500', 'animate-mic-pulse');
+        micBtn.classList.add('from-brand-500', 'to-indigo-600');
+        micIcon.className = "fa-solid fa-microphone";
+        
+        if (!statusText.innerText.includes("Super") && !statusText.innerText.includes("Try")) {
+            statusText.innerText = "Tap microphone to test your speech";
+            statusText.className = "text-sm font-bold text-slate-600";
+        }
+    };
+
+    return rec;
+}
+
+function toggleMicrophone() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        showToast("Speech Recognition", "Speech Recognition is best supported in Google Chrome, Edge, and modern Chromium browsers.", "warning");
+        simulateVoicePractice();
+        return;
+    }
+
+    if (!recognition) {
+        recognition = setupSpeechRecognition();
+    }
+
+    if (!recognition) return;
+
+    if (isListening) {
+        try { recognition.stop(); } catch(e) {}
+    } else {
+        try { recognition.start(); } catch(e) {
+            console.error("Recognition start error:", e);
+        }
+    }
+}
+
+// Fallback voice test simulator for environments without live mic permissions
+function simulateVoicePractice() {
+    const data = DIGRAPH_DATABASE[currentDigraphKey];
+    const targetWord = data.words[currentPracticeIndex].word.toLowerCase();
+    const promptGuess = prompt(`[Speech-to-Text Fallback]\nType the word you said out loud for "${targetWord}":`);
+    if (promptGuess !== null) {
+        handleSpokenWordEvaluation(promptGuess.toLowerCase().trim(), [promptGuess.toLowerCase().trim()]);
+    }
+}
+
+function handleSpokenWordEvaluation(primarySpoken, allAlternatives) {
+    const data = DIGRAPH_DATABASE[currentDigraphKey];
+    const targetWord = data.words[currentPracticeIndex].word.toLowerCase().trim();
+    
+    const feedbackBox = document.getElementById('feedbackBox');
+    const transcribedText = document.getElementById('transcribedResult');
+    const verdictText = document.getElementById('verdictText');
+    const statusText = document.getElementById('micStatusText');
+
+    transcribedText.innerText = `You said: "${primarySpoken}"`;
+
+    // Match verification: exact match, or within speech recognition candidates, or word included
+    const isMatch = allAlternatives.some(alt => {
+        const clean = alt.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").trim();
+        return clean === targetWord || clean.endsWith(" " + targetWord) || clean.startsWith(targetWord + " ");
+    });
+
+    if (isMatch) {
+        // Correct celebration
+        userStars += 5;
+        userStreak += 1;
+        saveScores();
+
+        playCelebrationSound();
+        triggerConfetti();
+
+        feedbackBox.className = "mt-5 p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-400 text-center min-h-[90px] flex flex-col items-center justify-center transition-all animate-bounce-gentle";
+        transcribedText.className = "text-sm text-emerald-800 font-bold";
+        verdictText.innerHTML = `🎉 Super Star! Perfect Match for "${targetWord}"! (+5 ⭐)`;
+        verdictText.className = "text-base font-extrabold text-emerald-700 mt-1";
+        statusText.innerText = "Awesome job! Ready for the next word?";
+        statusText.className = "text-sm font-extrabold text-emerald-600";
+    } else {
+        // Friendly Encouragement
+        userStreak = 0;
+        saveScores();
+        playRetrySound();
+
+        feedbackBox.className = "mt-5 p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-center min-h-[90px] flex flex-col items-center justify-center transition-all";
+        transcribedText.className = "text-sm text-amber-900 font-medium";
+        verdictText.innerHTML = `Almost there! Target was <strong>"${targetWord}"</strong>. Try one more time! 🌟`;
+        verdictText.className = "text-base font-extrabold text-amber-800 mt-1";
+        statusText.innerText = "Listen to the word again and tap microphone!";
+        statusText.className = "text-sm font-extrabold text-amber-600";
+    }
+}
+
+// Gamification persistence
+function saveScores() {
+    localStorage.setItem('phonics_stars', userStars.toString());
+    localStorage.setItem('phonics_streak', userStreak.toString());
+    document.getElementById('starCounter').innerText = userStars;
+    document.getElementById('streakCounter').innerText = userStreak;
+}
+
+function triggerConfetti() {
+    if (typeof confetti === 'function') {
+        confetti({
+            particleCount: 50,
+            spread: 60,
+            origin: { y: 0.75 },
+            colors: ['#38bdf8', '#7c3aed', '#f59e0b', '#10b981']
+        });
+    }
+}
+
+function toggleAudioSpeed() {
+    const label = document.getElementById('speedLabel');
+    if (speechRate === 0.82) {
+        speechRate = 0.65;
+        label.innerText = "Slow (Phonics)";
+        showToast("Audio Speed", "Set to Slow for step-by-step phoneme soundings.", "info");
+    } else {
+        speechRate = 0.82;
+        label.innerText = "Normal";
+        showToast("Audio Speed", "Set to Normal speech speed.", "info");
+    }
+}
+
+function showToast(title, message, type = 'info') {
+    const toast = document.getElementById('noticeToast');
+    const toastTitle = document.getElementById('toastTitle');
+    const toastMsg = document.getElementById('toastMessage');
+    const toastIcon = document.getElementById('toastIcon');
+
+    toastTitle.innerText = title;
+    toastMsg.innerText = message;
+
+    if (type === 'warning') {
+        toastIcon.className = "w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0 text-base";
+        toastIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
+    } else {
+        toastIcon.className = "w-9 h-9 rounded-xl bg-brand-500 text-white flex items-center justify-center flex-shrink-0 text-base";
+        toastIcon.innerHTML = `<i class="fa-solid fa-info"></i>`;
+    }
+
+    toast.classList.remove('translate-y-32', 'opacity-0', 'pointer-events-none');
+    setTimeout(() => {
+        toast.classList.add('translate-y-32', 'opacity-0', 'pointer-events-none');
+    }, 3800);
+}
+
+// Live search listener
+document.addEventListener('DOMContentLoaded', () => {
+    // Populate score counters
+    document.getElementById('starCounter').innerText = userStars;
+    document.getElementById('streakCounter').innerText = userStreak;
+
+    // Search bar event
+    const searchInput = document.getElementById('wordSearchInput');
+    searchInput.addEventListener('input', (e) => {
+        renderWordBank(e.target.value);
+    });
+
+    // Keyboard navigation (Left/Right arrow for flashcards, Space to hear)
+    window.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        if (e.key === 'ArrowRight') nextWord();
+        if (e.key === 'ArrowLeft') previousWord();
+        if (e.key === ' ') {
+            e.preventDefault();
+            speakTargetWord();
+        }
+    });
+
+    // Initialize initial state
+    initTabs();
+    renderSoundBuilder();
+    renderWordBank();
+    updatePracticeCard();
+
+    // Warm up speech synthesis voices
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => {
+            // Voices ready
+        };
+    }
+});
+</script>
+</body>
+</html>
